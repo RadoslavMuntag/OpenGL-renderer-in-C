@@ -9,20 +9,20 @@ void renderer_create(struct Renderer *self){
     MeshComponent* mesh_c;
     Entity *entity;
 
-    create_mesh_component(&self->meshList, "../assets/dome.obj");
+    /*create_mesh_component(&self->meshList, "../assets/dome.obj");
     mesh_c = get_mesh_by_id(&self->meshList, 0);
     init_entity(&self->entityList);
     entity = get_entity(&self->entityList,0);
     add_mesh_component(entity, mesh_c);
     add_transform_component(entity);
-    transform_set_scale(entity->transform, 100.0f,100.0f,100.0f);
+    transform_set_scale(entity->transform, 100.0f,100.0f,100.0f);*/
     //printf("%p\n",self->sky_entity->transform );
 
 
     create_mesh_component(&self->meshList, "../assets/casa_try.obj");
-    mesh_c = get_mesh_by_id(&self->meshList, 1);
+    mesh_c = get_mesh_by_id(&self->meshList, 0);
     init_entity(&self->entityList);
-    entity = get_entity(&self->entityList,1);
+    entity = get_entity(&self->entityList,0);
 
     add_mesh_component(entity, mesh_c);
     add_transform_component(entity);
@@ -44,7 +44,7 @@ void renderer_create(struct Renderer *self){
 
 
     glm_vec3_copy((vec3){2.27909f,0.58606f,0.69754f}, self->sun_pos);
-    glm_vec3_copy((vec3){0.0f, 0.0f, 0.1f}, self->sky_color);
+    glm_vec3_copy((vec3){0.05f, 0.05f, 0.1f}, self->sky_color);
 
     //glm_vec3_copy((vec3){-100.0f,100.0f,-100.0f}, self->sun_pos);
     //glm_vec3_copy((vec3){0.65f, 0.75f, 0.9f}, self->sky_color);
@@ -56,11 +56,13 @@ void renderer_create(struct Renderer *self){
                     {.index = 1, .name = "aColor"}
             });
 
-    self->sky_shader = shader_create(
+    /*self->sky_shader = shader_create(
             "../shaders/sky.vert", "../shaders/sky.frag",
             1, (struct VertexAttr[]){
                     {.index = 0, .name = "aPos"}
-            });
+            });*/
+
+    //self->sky_shader = shader_fragment_create("../shaders/sky.frag");
 
 }
 
@@ -135,7 +137,7 @@ void renderer_update(struct Renderer *self, struct Camera* camera){
     mat4 model_tmp;
     Entity *entity;
 
-    glClearColor(self->sky_color[0], self->sky_color[1], self->sky_color[2], 1.0f);
+    glClearColor(powf(self->sky_color[0],1.0f/2.2f), powf(self->sky_color[1],1.0f/2.2f), powf(self->sky_color[2],1.0f/2.2f), 1.0f);
 
     //_render_sky(&self->sky_shader, &self->entityList, camera->view, camera->projection);
 //  ------------------------------------------------------------------------------------
@@ -153,7 +155,7 @@ void renderer_update(struct Renderer *self, struct Camera* camera){
     projLoc = glGetUniformLocation(self->default_shader.handle, "projection");
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, ( GLfloat*)camera->projection);
 
-    for (int i = 1; i < self->entityList.size; ++i) {
+    for (int i = 0; i < self->entityList.size; ++i) {
 
         entity = get_entity(&self->entityList,i);
         MeshComponent* mesh_c = entity->mesh;
@@ -168,7 +170,7 @@ void renderer_update(struct Renderer *self, struct Camera* camera){
         vbo_bind(mesh_c->ebo);
 
 
-        glDrawElements(GL_LINES, mesh_c->model_size, GL_UNSIGNED_INT,(void *) 0);
+        glDrawElements(GL_TRIANGLES, mesh_c->model_size, GL_UNSIGNED_INT,(void *) 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }

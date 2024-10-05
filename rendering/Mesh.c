@@ -23,6 +23,223 @@ void debug_print(Vertices *vertices, Indices *indices){
 
 }
 
+void average_vec3(vec3* vectors, int n, vec3 result) {
+    // Initialize result to zero vector
+    glm_vec3_zero(result);
+
+    // Sum all vectors
+    for (int i = 0; i < n; i++) {
+        glm_vec3_add(result, vectors[i], result);
+    }
+
+    // Divide by number of vectors to get the average
+    glm_vec3_scale(result, 1.0f / (float)n, result);
+}
+
+bool is_point_in_triangle(vec3 v, vec3 v1, vec3 v2, vec3 v3) {
+    vec3 e1, e2, e3;
+    vec3 p1, p2, p3;
+    vec3 c1, c2, c3;
+
+    // Define triangle edges
+    glm_vec3_sub(v2, v1, e1); // e1 = v2 - v1
+    glm_vec3_sub(v3, v2, e2); // e2 = v3 - v2
+    glm_vec3_sub(v1, v3, e3); // e3 = v1 - v3
+
+    // Create vectors from triangle vertices to the point
+    glm_vec3_sub(v, v1, p1); // p1 = v - v1
+    glm_vec3_sub(v, v2, p2); // p2 = v - v2
+    glm_vec3_sub(v, v3, p3); // p3 = v - v3
+
+    // Compute cross products
+    glm_vec3_cross(e1, p1, c1); // c1 = e1 x p1
+    glm_vec3_cross(e2, p2, c2); // c2 = e2 x p2
+    glm_vec3_cross(e3, p3, c3); // c3 = e3 x p3
+
+    // Compute dot products
+    float dot1 = glm_vec3_dot(c1, c2);
+    float dot2 = glm_vec3_dot(c2, c3);
+    float dot3 = glm_vec3_dot(c3, c1);
+
+    // Check if all dot products have the same sign
+    return dot1 >= 0 && dot2 >= 0 && dot3 >= 0;
+}
+
+
+float angle_at_vertex(vec3 v1, vec3 v2, vec3 v3, vec3 triangle_normal) {
+    vec3 a, b;
+
+    // Create vectors a and b
+    glm_vec3_sub(v1, v2, a); // a = v1 - v2
+    glm_vec3_sub(v3, v2, b); // b = v3 - v2
+
+    vec3 cross_product;
+    glm_vec3_cross(a, b, cross_product);
+
+    glm_vec3_normalize(cross_product);
+    glm_vec3_normalize(triangle_normal);
+
+    float normals_dot = glm_vec3_dot(cross_product,triangle_normal);
+
+    // Calculate the dot product
+    float dot_product = glm_vec3_dot(a, b);
+
+    // Calculate magnitudes
+    float mag_a = glm_vec3_norm(a);
+    float mag_b = glm_vec3_norm(b);
+
+    // Calculate the angle in radians
+    float angle = acosf(dot_product / (mag_a * mag_b));
+
+    // Optionally convert angle to degrees
+    float angle_degrees = angle * (180.0f / GLM_PIf);
+
+    if (normals_dot > 0){
+        return 360.0f - angle_degrees;
+    }
+
+
+    return angle_degrees; // returns the angle in radians
+}
+
+int find_lower_vertex(const bool *buffer, int buffer_size, int index){
+
+    for (int i = index - 1; true ; --i) {
+        if (i < 0){
+            i = buffer_size -1;
+        }
+
+        if (i == index){
+            return -1;
+        }
+
+        if(buffer[i]){
+            return i;
+        }
+
+    }
+
+}
+
+int find_upper_vertex(const bool *buffer, int buffer_size, int index){
+    for (int i = index + 1; true ; ++i) {
+        if (i >= buffer_size){
+            i = 0;
+        }
+
+        if (i == index){
+            return -1;
+        }
+
+        if(buffer[i]){
+            return i;
+        }
+
+    }
+}
+
+bool validate_triangle(const bool *buffer, int buffer_size,
+                    vec3 v1, vec3 v2, vec3 v3,
+                    int v1_index, int v2_index, int v3_index,
+                    Face *face){
+    for (int i = 0; i < buffer_size; ++i) {
+        if( i == v1_index || i == v2_index || i == v3_index || !buffer[i]){
+            continue;
+        }
+        Vertex *v_temp = &face->v[i];
+        vec3 v;
+        glm_vec3_copy((vec3){v_temp->x, v_temp->y, v_temp->z}, v);
+
+        if(is_point_in_triangle(v, v1, v2, v3)){
+            return false;
+        }
+    }
+    return true;
+}
+
+void ear_clipping_algorithm(bool *v_buffer, int buffer_size, Face* face, Indices *indices, int old_size){
+    while(buffer_size > 0){
+        int control_val = 0;
+
+        for (int i = 0; i < buffer_size; ++i) {
+            if(v_buffer[i] == false){
+                continue;
+            }
+
+            int v1_index = find_lower_vertex(v_buffer, buffer_size, i);
+            int v3_index = find_upper_vertex(v_buffer, buffer_size, i);
+
+            if(v1_index == v3_index || v1_index == -1 || v3_index == -1){
+                return;
+            }
+
+            Vertex *v1_temp = &face->v[v1_index];
+            Vertex *v2_temp = &face->v[i];
+            Vertex *v3_temp = &face->v[v3_index];
+
+
+            vec3 v1;
+            vec3 v2;
+            vec3 v3;
+
+            vec3 normals[3];
+
+            glm_vec3_copy((vec3){v1_temp->x, v1_temp->y, v1_temp->z}, v1);
+            glm_vec3_copy((vec3){v2_temp->x, v2_temp->y, v2_temp->z}, v2);
+            glm_vec3_copy((vec3){v3_temp->x, v3_temp->y, v3_temp->z}, v3);
+
+
+            if(glm_vec3_eqv(v2, v3) || glm_vec3_eqv(v1,v2)){
+                control_val++;
+                v_buffer[i] = false;
+                continue;
+            }
+
+            Vertex *vn1_temp = &face->vn[v1_index];
+            Vertex *vn2_temp = &face->vn[i];
+            Vertex *vn3_temp = &face->vn[v3_index];
+
+            glm_vec3_copy((vec3){vn1_temp->x, vn1_temp->y, vn1_temp->z}, normals[0]);
+            glm_vec3_copy((vec3){vn2_temp->x, vn2_temp->y, vn2_temp->z}, normals[1]);
+            glm_vec3_copy((vec3){vn3_temp->x, vn3_temp->y, vn3_temp->z}, normals[2]);
+
+            vec3 triangle_normal;
+            average_vec3(normals, 3, triangle_normal);
+
+            float angle = angle_at_vertex(v1,v2,v3, triangle_normal);
+
+            if(angle == 180.0f){
+                control_val++;
+                v_buffer[i] = false;
+                continue;
+            }
+
+            if (angle > 180.0f ||
+                !validate_triangle(v_buffer, buffer_size,
+                                   v1, v2, v3,
+                                   v1_index, i, v3_index,
+                                   face))
+            {
+                continue;
+            }
+
+            indices->data[indices->size++] = old_size + v1_index;
+            indices->data[indices->size++] = old_size + i;
+            indices->data[indices->size++] = old_size + v3_index;
+
+            v_buffer[i] = false;
+            control_val++;
+            /*if (i == buffer_size - 1){
+                buffer_size--;
+            }*/
+        }
+        /*if(control_val == 0){
+            return;
+        }*/
+    }
+}
+
+
 void add_vertex(Vertices *vertices, Vertex *v, TexCoord *vt, Vertex *vn, float id){
     vertices->data[vertices->size++] = v->x;
     vertices->data[vertices->size++] = v->y;
@@ -38,17 +255,24 @@ void add_vertex(Vertices *vertices, Vertex *v, TexCoord *vt, Vertex *vn, float i
 void fill_vertices(Vertices *vertices, Indices *indices, Face *face, Material *material){
     assert(face->count >= 3);
     int old_size = vertices->size/9;
+
+    bool v_buffer[1028];
+    int buffer_size = 0;
+
     for (int i = 0; i < face->count; ++i) {
         add_vertex(vertices, &face->v[i], &face->vt[i], &face->vn[i], (float)material->mtlID);
+        v_buffer[buffer_size++] = true;
     }
 
-    int triangles = 0;
+    ear_clipping_algorithm(v_buffer, buffer_size, face, indices, old_size);
+
+    /*int triangles = 0;
     while(triangles + 2 < face->count){
         indices->data[indices->size++] = old_size;
         indices->data[indices->size++] = 1 + triangles + old_size;
         indices->data[indices->size++] = 2 + triangles + old_size;
         triangles++;
-    }
+    }*/
 
 }
 

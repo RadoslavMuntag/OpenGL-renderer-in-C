@@ -23,6 +23,7 @@ struct Shader {
 struct Shader shader_create(char *vs_path, char *fs_path, size_t n, struct VertexAttr attributes[]);
 void shader_destroy(struct Shader self);
 void shader_bind(struct Shader self);
+struct Shader shader_fragment_create(char *fs_path);
 //void shader_uniform_mat4(struct Shader self, char *name, mat4s m);
 //void shader_uniform_view_proj(struct Shader self, struct ViewProj view_proj);
 //void shader_uniform_texture2D(struct Shader self, char *name, struct Texture texture, GLuint n);

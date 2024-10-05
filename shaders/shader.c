@@ -82,6 +82,25 @@ struct Shader shader_create(char *vs_path, char *fs_path, size_t n, struct Verte
     return self;
 }
 
+struct Shader shader_fragment_create(char *fs_path){
+    struct Shader self;
+    self.fs_handle = _compile(fs_path, GL_FRAGMENT_SHADER);
+    self.handle = glCreateProgram();
+    glAttachShader(self.handle, self.fs_handle);
+    glLinkProgram(self.handle);
+
+    GLint linked;
+    glGetProgramiv(self.handle, GL_LINK_STATUS, &linked);
+
+    if (linked == 0) {
+        char buf[512];
+        snprintf(buf, 512, "[%s]", fs_path);
+        _log_and_fail(self.handle, "linking", buf, glGetProgramInfoLog, glGetProgramiv);
+    }
+
+    return self;
+}
+
 void shader_destroy(struct Shader self) {
     glDeleteProgram(self.handle);
     glDeleteShader(self.vs_handle);

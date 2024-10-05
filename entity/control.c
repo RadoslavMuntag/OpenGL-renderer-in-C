@@ -111,8 +111,8 @@ void animate(float u, float v, double t, Entity* entity){
 void tick(struct Keyboard *keyboard, struct Camera *camera, EntityList *entity_list, int refreshRate, double time) {
     float secPerTick = 1.0f/ (float) refreshRate;
     _update_camera(keyboard, camera, secPerTick);
-    Entity* sky_entity = get_entity(entity_list, 0);
-    transform_set_position(sky_entity->transform, camera->cameraPos[0], camera->cameraPos[1], camera->cameraPos[2]);
+    //Entity* sky_entity = get_entity(entity_list, 0);
+    //transform_set_position(sky_entity->transform, camera->cameraPos[0], camera->cameraPos[1], camera->cameraPos[2]);
     //int row_size = (int)sqrt((double)entity_list->size);
     /*for (int i = 0; i < entity_list->size; ++i) {
         Entity* entity = get_entity(entity_list,i);
