@@ -78,7 +78,16 @@ void destroy_materials(MtlArr* mtl_arr){
     if(mtl_arr->data == NULL){
         return;
     }
+    for (int i = 0; i < mtl_arr->size; ++i) {
+        Material *current = &mtl_arr->data[i];
+        if(current->map_Kd != NULL){
+            glDeleteTextures(1, &current->map_Kd->ref);
+            free(current->map_Kd);
+            current->map_Kd = NULL;
+        }
+    }
     free(mtl_arr->data);
+    mtl_arr->data = NULL;
 }
 
 void destroy_mesh_list(MeshList* list){
@@ -93,4 +102,5 @@ void destroy_mesh_list(MeshList* list){
         current = NULL;
     }
     free(list->data);
+    list->data = NULL;
 };
