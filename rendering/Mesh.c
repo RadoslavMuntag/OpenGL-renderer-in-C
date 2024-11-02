@@ -317,7 +317,26 @@ void parse_mtl_file(const char *filename, MtlArr *mtl_arr){
             current = &mtl_arr->data[mtl_arr->size - 1];
             current->mtlID = mtl_arr->size -1;
             sscanf(line, "%*s %s", current->name);
+            current->map_Kd = NULL;
 
+        }
+
+        else if (line[0] == 'm' && line[1] == 'a' && line[2] == 'p' && line[3] == '_' && line[4] == 'K' && line[5] == 'd' ){
+            char buffer[128];
+            char path[128];
+            TexComponent *temp_holder = (TexComponent*) malloc(sizeof(TexComponent));
+
+
+            sscanf(line, "map_Kd %s", buffer);
+            sprintf(path, "../assets/textures/%s", buffer);
+
+            if(loadTexture(temp_holder, path, GL_NEAREST)){
+                free(temp_holder);
+                continue;
+            }
+
+            printf("Texture image opened successfully!\n");
+            current->map_Kd = temp_holder;
         }
     }
     fclose(file);

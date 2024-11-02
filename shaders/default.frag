@@ -10,13 +10,17 @@ struct Material {
 
 
 in vec3 FragPos;
+in vec2 TexCoords;
 in vec3 Normal;
-in float mtlID;
+flat in int mtlID;
 
 out vec4 color;
 
 
 uniform Material materials[MAX_MATERIALS];
+uniform sampler2D textureSampler;
+uniform int texturedIndex;
+
 uniform mat4 view;
 uniform mat4 projection;
 uniform vec2 winSize;
@@ -28,8 +32,8 @@ uniform vec3 skyColor;     // Sky color for tinting
 uniform vec3 skyDir = vec3(0.0, 1.0, 0.0);  // World-space up vector representing the sky direction (upwards)
 
 uniform float constantAttenuation = 1.0;  // Attenuation parameters
-uniform float linearAttenuation = 0.12;
-uniform float quadraticAttenuation = 0.10;
+uniform float linearAttenuation = 0.7;
+uniform float quadraticAttenuation = 1.8;
 //uniform float linearAttenuation = 0.0;
 //uniform float quadraticAttenuation = 0.0;
 
@@ -71,8 +75,13 @@ float distance_to_light(){
 
 void main()
 {
-    int new_mtlID = int(mtlID);
-
+    vec3 Kd_color;
+    if (mtlID == texturedIndex){
+        Kd_color = vec3(texture(textureSampler, TexCoords));
+    }
+    else{
+        Kd_color = materials[mtlID].Kd;
+    }
     // Compute the distance between the fragment and the light source
     float distance = length(lightPos - FragPos);
 
@@ -81,7 +90,7 @@ void main()
 
     // Ambient lighting
     float ambientStrength = 0.2f;
-    vec3 ambient = materials[new_mtlID].Kd * ambientStrength;
+    vec3 ambient = Kd_color * ambientStrength;
 
     // Normal and light direction
     vec3 norm = normalize(Normal);
@@ -89,14 +98,14 @@ void main()
 
     // Diffuse lighting
     float diff = max(dot(norm, lightDir), 0.0f);
-    vec3 diffuse = materials[new_mtlID].Kd * diff;
+    vec3 diffuse = Kd_color * diff;
 
     // Specular lighting
     float specularStrength = 1.0f;
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = normalize(reflect(-lightDir, norm));
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), materials[new_mtlID].Ns);
-    vec3 specular = materials[new_mtlID].Ks * spec;
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), materials[mtlID].Ns);
+    vec3 specular = materials[mtlID].Ks * spec;
 
     // Combine lighting results
     vec3 lightingResult = (ambient + diffuse + specular)* lightColor * attenuation;
@@ -105,13 +114,13 @@ void main()
     float facingSky = dot(norm, skyDir);  // Dot product to determine if facing the sky
     if (facingSky >= -0.0f) {
         // If the surface is facing the sky, blend with sky color
-        float skyTintFactor = min(facingSky,0.3f);  // Directly use the dot product value for blending
+        float skyTintFactor = min(facingSky,0.3f) * 0.5;  // Directly use the dot product value for blending
         lightingResult = lightingResult + skyColor * skyTintFactor;
     }
 
     if (is_fragment_behind_light()){
         float light_frag_distance = distance_to_light();
-        float win_attenuation = 1.0 / (constantAttenuation + 0.05 * light_frag_distance + 0.001 * light_frag_distance * light_frag_distance);
+        float win_attenuation = 1.0 / (constantAttenuation + 0.005 * light_frag_distance + 0.005 * light_frag_distance * light_frag_distance);
         lightingResult = lightingResult + (lightColor * win_attenuation);
     }
 
@@ -119,9 +128,9 @@ void main()
     vec4 end_result = vec4(lightingResult, 1.0) * (1.0f - depth) + vec4(depth * skyColor, 1.0f);
 
     //gamma correction
-    /*if(gl_FragCoord.x < winSize[0]/2){
-        lightingResult = pow(lightingResult, vec3(1.0/2.2));
-    }*/
+    //if(gl_FragCoord.x < winSize[0]/2){
+        //end_result = pow(end_result, vec4(1.0/2.2));
+    //}
     end_result = pow(end_result, vec4(1.0/2.2));
 
 

@@ -46,6 +46,10 @@ set(SOURCES
         entity/c_mesh.h
         entity/components.h
         stb.c
+        entity/c_light.c
+        entity/c_light.h
+        entity/c_texture.c
+        entity/c_texture.h
 )
 
 # Add the executable target

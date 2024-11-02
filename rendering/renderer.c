@@ -126,6 +126,13 @@ void set_uniform_materials(MtlArr *mtl_arr, struct Shader *shaderProgram){
         // Set Ks
         snprintf(buffer, sizeof(buffer), "materials[%d].Ks", i);
         glUniform3fv(glGetUniformLocation(shaderProgram->handle, buffer), 1, mtl_arr->data[i].Ks);
+
+        if(mtl_arr->data[i].map_Kd != NULL){
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, mtl_arr->data[i].map_Kd->ref);
+            glUniform1i(glGetUniformLocation(shaderProgram->handle, "textureSampler"), 0);
+            glUniform1i(glGetUniformLocation(shaderProgram->handle, "texturedIndex"), i);
+        }
     }
 };
 

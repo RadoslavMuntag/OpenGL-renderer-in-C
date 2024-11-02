@@ -8,6 +8,7 @@
 
 #include "../utils/utils.h"
 #include "VAO.h"
+#include "../entity/c_texture.h"
 
 #define MAX_DATA 3000
 #define MAX_VERTICES 4000000
@@ -55,11 +56,13 @@ typedef struct{
     vec3 Ka; // ambient lighting
     vec3 Kd; // diffuse lighting
     vec3 Ks; // specular highlights color and intensity
+    TexComponent *map_Kd;
 }Material;
 
 typedef struct{
     Material *data;
     int size;
+
 }MtlArr;
 
 
