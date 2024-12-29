@@ -14,12 +14,16 @@
 #include "../utils/utils.h"
 #include "../utils/rand_obj_data.h"
 #include "../utils/camera.h"
+#include "post_procesing.h"
 
 
 
 struct Renderer{
     struct Shader default_shader;
     struct Shader sky_shader;
+
+    FBO* framebuffer;
+
     Entity* sky_entity;
 
     vec3 sun_pos;
@@ -30,7 +34,7 @@ struct Renderer{
     MeshList meshList;
 };
 
-void renderer_create(struct Renderer *self);
+void renderer_create(struct Renderer *self, struct Camera* camera);
 void renderer_update(struct Renderer *self, struct Camera* camera);
 
 void renderer_destroy(struct Renderer *self);

@@ -31,3 +31,19 @@ int loadTexture(TexComponent *texture, const char *filename, GLint texScaling){
     glBindTexture(GL_TEXTURE_2D, 0);
     return 0;
 }
+
+void create_empty_Texture(TexComponent *texture, GLint texScaling, int width, int height){
+
+    glGenTextures(1, &texture->ref);
+    glBindTexture(GL_TEXTURE_2D, texture->ref);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texScaling);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texScaling);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}

@@ -12,6 +12,7 @@ static void _size_callback(GLFWwindow *handle, int width, int height){
     //glViewport(0, 0, width, height);
     window.width = width;
     window.height = height;
+    resize_fbo(window.renderer.framebuffer, width, height);
     cam_resize(&window.camera,width, height);
 
     glViewport(0,0,window.width,window.height);
@@ -96,8 +97,8 @@ void window_create(){
     glfwSetFramebufferSizeCallback(window.handle, _size_callback);
     glfwSetKeyCallback(window.handle, _key_callback);
 
-    renderer_create(&window.renderer);
     camera_create(&window.camera, window.width, window.height);
+    renderer_create(&window.renderer, &window.camera);
     window.time_from_start = glfwGetTime();
 
 

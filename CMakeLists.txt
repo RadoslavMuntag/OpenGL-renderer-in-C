@@ -50,6 +50,8 @@ set(SOURCES
         entity/c_light.h
         entity/c_texture.c
         entity/c_texture.h
+        rendering/post_procesing.c
+        rendering/post_procesing.h
 )
 
 # Add the executable target

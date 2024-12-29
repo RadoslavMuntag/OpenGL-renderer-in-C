@@ -124,14 +124,14 @@ void main()
         lightingResult = lightingResult + (lightColor * win_attenuation);
     }
 
-    float depth = linear_depth(gl_FragCoord.z)/25;
-    vec4 end_result = vec4(lightingResult, 1.0) * (1.0f - depth) + vec4(depth * skyColor, 1.0f);
+    float depth = linear_depth(gl_FragCoord.z)/50;
+    vec4 end_result = vec4(lightingResult, 1.0) * (1.0f / (0.3f+depth)) + vec4(depth * skyColor, 1.0f);
 
     //gamma correction
     //if(gl_FragCoord.x < winSize[0]/2){
         //end_result = pow(end_result, vec4(1.0/2.2));
     //}
-    end_result = pow(end_result, vec4(1.0/2.2));
+    //end_result = pow(end_result, vec4(1.0/2.2));
 
 
     //lightingResult = lightingResult + (lightColor * attenuation / 10);

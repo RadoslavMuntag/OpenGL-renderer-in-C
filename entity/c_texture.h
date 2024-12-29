@@ -13,5 +13,5 @@ typedef struct {
 }TexComponent;
 
 int loadTexture(TexComponent *texture, const char *filename, GLint texScaling);
-
+void create_empty_Texture(TexComponent *texture, GLint texScaling, int width, int height);
 #endif //MYGLFWPROJECT_C_TEXTURE_H

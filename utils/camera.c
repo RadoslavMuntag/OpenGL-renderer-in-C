@@ -17,7 +17,12 @@ void print_mat4(mat4 matrix) {
 void cam_resize(struct Camera *self, int width, int height){
     self->width = width;
     self->height = height;
+    float ratio = (float)self->width / (float)self->height;
     glm_perspective(45.0f * (3.1415926f / 180.0f), (float)self->width / (float)self->height, 0.1f, 100.0f, self->projection);
+    /*float left = -3.0f * ratio, right = 3.0f * ratio;
+    float bottom = -3.0f, top = 3.0f;
+    float near = 0.1f, far = 100.0f;
+    glm_ortho(left, right, bottom, top, near, far, self->projection);*/
     print_mat4(self->projection);
 }
 
@@ -66,11 +71,10 @@ void update_camera(struct Camera *self){
 //    glEnable(GL_CULL_FACE);
 //    glCullFace(GL_BACK);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    /*glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_CULL_FACE);          // Enable face culling
-    glCullFace(GL_BACK);             // Cull back faces
+    glCullFace(GL_BACK);             // Cull back faces*/
 
 
     vec3 temp;

@@ -4,7 +4,9 @@
 
 #include "renderer.h"
 
-void renderer_create(struct Renderer *self){
+void renderer_create(struct Renderer *self, struct Camera* camera){
+    self->framebuffer = create_fbo(&self->meshList, camera->width, camera->height);
+
     init_entity_list(&self->entityList);
     MeshComponent* mesh_c;
     Entity *entity;
@@ -48,7 +50,6 @@ void renderer_create(struct Renderer *self){
 
     //glm_vec3_copy((vec3){-100.0f,100.0f,-100.0f}, self->sun_pos);
     //glm_vec3_copy((vec3){0.65f, 0.75f, 0.9f}, self->sky_color);
-
     self->default_shader = shader_create(
             "../shaders/default.vert", "../shaders/default.frag",
             2, (struct VertexAttr[]){
@@ -136,20 +137,9 @@ void set_uniform_materials(MtlArr *mtl_arr, struct Shader *shaderProgram){
     }
 };
 
-
-void renderer_update(struct Renderer *self, struct Camera* camera){
+void set_default_uniforms(struct Renderer *self, struct Camera* camera){
     GLint viewLoc;
     GLint projLoc;
-    GLint modelLoc;
-    mat4 model_tmp;
-    Entity *entity;
-
-    glClearColor(powf(self->sky_color[0],1.0f/2.2f), powf(self->sky_color[1],1.0f/2.2f), powf(self->sky_color[2],1.0f/2.2f), 1.0f);
-
-    //_render_sky(&self->sky_shader, &self->entityList, camera->view, camera->projection);
-//  ------------------------------------------------------------------------------------
-    glUseProgram(self->default_shader.handle);
-
     glUniform3f(glGetUniformLocation(self->default_shader.handle, "lightPos"), self->sun_pos[0], self->sun_pos[1], self->sun_pos[2]);
     glUniform3f(glGetUniformLocation(self->default_shader.handle, "viewPos"), camera->cameraPos[0], camera->cameraPos[1], camera->cameraPos[2]);
     glUniform3f(glGetUniformLocation(self->default_shader.handle, "lightColor"), 1.0f, 0.33f, 0.01f);
@@ -157,10 +147,28 @@ void renderer_update(struct Renderer *self, struct Camera* camera){
     glUniform2f(glGetUniformLocation(self->default_shader.handle, "winSize"), (float)camera->width, (float)camera->height);
     //1.0f, 0.6f, 0.3f
     //1.0f, 0.23f, 0.01f
+    //1.0f, 0.33f, 0.01f
     viewLoc = glGetUniformLocation(self->default_shader.handle, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, ( GLfloat*)camera->view);
     projLoc = glGetUniformLocation(self->default_shader.handle, "projection");
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, ( GLfloat*)camera->projection);
+}
+
+
+void renderer_update(struct Renderer *self, struct Camera* camera){
+    GLint modelLoc;
+    mat4 model_tmp;
+    Entity *entity;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer->handle);
+    glClearColor(self->sky_color[0], self->sky_color[1], self->sky_color[2], 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    //_render_sky(&self->sky_shader, &self->entityList, camera->view, camera->projection);
+//  ------------------------------------------------------------------------------------
+    glUseProgram(self->default_shader.handle);
+
+    set_default_uniforms(self,camera);
 
     for (int i = 0; i < self->entityList.size; ++i) {
 
@@ -181,9 +189,20 @@ void renderer_update(struct Renderer *self, struct Camera* camera){
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glUseProgram(self->framebuffer->frame_shader.handle);
+    glUniform2f(glGetUniformLocation(self->framebuffer->frame_shader.handle, "winSize"), (float)camera->width, (float)camera->height);
+
+    vao_bind(self->framebuffer->frame_mesh.vao);
+    glDisable(GL_DEPTH_TEST);
+    glBindTexture(GL_TEXTURE_2D, self->framebuffer->framebufferTex->ref);
+    glDrawArrays(GL_TRIANGLES,0,6);
+
+
 }
 
 void renderer_destroy(struct Renderer *self){
+    fbo_destroy(self->framebuffer);
     shader_destroy(self->default_shader);
     shader_destroy(self->sky_shader);
     destroy_mesh_list(&self->meshList);

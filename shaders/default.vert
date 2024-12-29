@@ -10,6 +10,8 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+uniform vec2 winSize;
+
 // Output to the fragment shader
 out vec3 FragPos;
 out vec2 TexCoords;
